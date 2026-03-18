@@ -3,7 +3,7 @@ from datasets import load_dataset
 from PIL import Image
 from tqdm import tqdm
 
-def download_dataset(save_dir="./data/midjourney-v6-llava"):
+def download_dataset(save_dir="/mmu-vcg/gaomingju/data/T2I/midjourney-v6-llava"):
     """
     Downloads the brivangl/midjourney-v6-llava dataset from Hugging Face
     and saves the images and metadata locally.
@@ -14,10 +14,11 @@ def download_dataset(save_dir="./data/midjourney-v6-llava"):
     images_dir = os.path.join(save_dir, "images")
     os.makedirs(images_dir, exist_ok=True)
     
-    # Load the dataset (streaming mode to avoid downloading everything into RAM at once)
-    # Note: This dataset is large (~986k rows). We'll download it normally.
-    print("Loading dataset from Hugging Face...")
-    dataset = load_dataset("brivangl/midjourney-v6-llava", split="train")
+    # Load the dataset
+    # cache_dir 设置 Hugging Face 原始数据的下载缓存路径
+    cache_dir = "/mmu-vcg/gaomingju/data/T2I/hf_cache"
+    print(f"Loading dataset from Hugging Face (cache: {cache_dir})...")
+    dataset = load_dataset("brivangl/midjourney-v6-llava", split="train", cache_dir=cache_dir)
     
     print(f"Total items in dataset: {len(dataset)}")
     
