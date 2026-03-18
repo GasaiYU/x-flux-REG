@@ -21,7 +21,7 @@ from accelerate.utils import ProjectConfiguration, set_seed
 from huggingface_hub import create_repo, upload_folder
 from packaging import version
 from tqdm.auto import tqdm
-from transformers import CLIPTextModel, CLIPTokenizer
+from transformers import CLIPTextModel, CLIPTokenizer, AutoProcessor, Siglip2VisionModel
 from transformers.utils import ContextManagers
 from omegaconf import OmegaConf
 from copy import deepcopy
@@ -184,6 +184,12 @@ def main():
         weight_dtype = torch.bfloat16
         args.mixed_precision = accelerator.mixed_precision
 
+    # Load SigLIP2 model and processor
+    siglip_model_id = "google/siglip2-base-patch16-224"
+    siglip2_processor = AutoProcessor.from_pretrained(siglip_model_id)
+    siglip2_model = Siglip2VisionModel.from_pretrained(siglip_model_id).to(accelerator.device, dtype=weight_dtype)
+    siglip2_model.eval()
+    siglip2_model.requires_grad_(False)
 
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
     if overrode_max_train_steps:
@@ -216,6 +222,17 @@ def main():
             with accelerator.accumulate(dit):
                 img, prompts = batch
                 with torch.no_grad():
+                    # --- SigLIP2 Image Processing ---
+                    # 假设 img 是 [-1, 1] 范围的张量，将其映射回 [0, 1] 供 processor 使用
+                    img_for_siglip = (img + 1.0) / 2.0
+                    siglip_inputs = siglip2_processor(images=img_for_siglip, return_tensors="pt").to(accelerator.device)
+                    siglip_inputs["pixel_values"] = siglip_inputs["pixel_values"].to(weight_dtype)
+                    
+                    siglip_outputs = siglip2_model(**siglip_inputs)
+                    siglip_tokens = siglip_outputs.last_hidden_state # 形状: [batch_size, seq_len, hidden_size]
+                    breakpoint()
+                    # --------------------------------
+
                     x_1 = vae.encode(img.to(accelerator.device).to(torch.float32))
                     inp = prepare(t5=t5, clip=clip, img=x_1, prompt=prompts)
                     x_1 = rearrange(x_1, "b c (h ph) (w pw) -> b (h w) (c ph pw)", ph=2, pw=2)
