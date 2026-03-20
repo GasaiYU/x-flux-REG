@@ -232,7 +232,7 @@ def main():
                     
                     siglip_outputs = siglip2_model(**siglip_inputs)
                     siglip_tokens = siglip_outputs.last_hidden_state # 形状: [batch_size, seq_len, hidden_size]
-                    
+                    breakpoint()
                     # --------------------------------
 
                     x_1 = vae.encode(img.to(accelerator.device).to(torch.float32))
