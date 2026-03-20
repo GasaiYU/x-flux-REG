@@ -7,9 +7,19 @@ from src.flux.xflux_pipeline import XFluxPipeline
 def main(args):
     # Set local model paths if provided
     if args.model_path:
-        os.environ["FLUX_DEV"] = os.path.join(args.model_path, "flux1-dev.safetensors")
-        os.environ["AE"] = os.path.join(args.model_path, "ae.safetensors")
-        print(f"Set local model paths: FLUX_DEV={os.environ['FLUX_DEV']}, AE={os.environ['AE']}")
+        from src.flux.util import configs
+        
+        flux_path = os.path.join(args.model_path, "flux1-dev.safetensors")
+        ae_path = os.path.join(args.model_path, "ae.safetensors")
+        
+        # Update the configs dictionary directly since it was already initialized on import
+        if args.name in configs:
+            configs[args.name].ckpt_path = flux_path
+            configs[args.name].ae_path = ae_path
+            print(f"Set local model paths in configs: FLUX_DEV={flux_path}, AE={ae_path}")
+        
+        os.environ["FLUX_DEV"] = flux_path
+        os.environ["AE"] = ae_path
 
     # Initialize the pipeline
     device = "cuda" if torch.cuda.is_available() else "cpu"
