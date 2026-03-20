@@ -5,6 +5,12 @@ from PIL import Image, ExifTags
 from src.flux.xflux_pipeline import XFluxPipeline
 
 def main(args):
+    # Set local model paths if provided
+    if args.model_path:
+        os.environ["FLUX_DEV"] = os.path.join(args.model_path, "flux1-dev.safetensors")
+        os.environ["AE"] = os.path.join(args.model_path, "ae.safetensors")
+        print(f"Set local model paths: FLUX_DEV={os.environ['FLUX_DEV']}, AE={os.environ['AE']}")
+
     # Initialize the pipeline
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if args.device:
@@ -56,6 +62,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, default="output/t2i_results", help="Directory to save generated images")
     parser.add_argument("--name", type=str, default="flux-dev", help="Model name")
     parser.add_argument("--device", type=str, default="", help="Device to use (e.g., cuda, cpu)")
+    parser.add_argument("--model_path", type=str, default="", help="Local path to the Flux.1-dev model directory")
     parser.add_argument("--offload", action="store_true", help="Offload model to CPU when not in use")
     
     # Generation parameters
