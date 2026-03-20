@@ -3,10 +3,10 @@ data_config:
   train_batch_size: 1
   num_workers: 4
   img_size: 512
-  img_dir: images/
+  img_dir: /mmu-vcg/gaomingju/data/T2I/midjourney-v6-llava/
 report_to: wandb
 train_batch_size: 1
-output_dir: saves/
+output_dir: /mmu-vcg/gaomingju/data/T2I/reg_results/saves/
 max_train_steps: 100000
 learning_rate: 1e-5
 lr_scheduler: constant
@@ -20,6 +20,6 @@ logging_dir: logs
 mixed_precision: "bf16"
 checkpointing_steps: 2500
 checkpoints_total_limit: 10
-tracker_project_name: finetune_test
+tracker_project_name: reg_test
 resume_from_checkpoint: latest
 gradient_accumulation_steps: 2

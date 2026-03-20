@@ -146,6 +146,7 @@ class Flux(nn.Module):
         guidance: Tensor | None = None,
         image_proj: Tensor | None = None, 
         ip_scale: Tensor | float = 1.0, 
+        siglip_tokens: Tensor | None = None,
     ) -> Tensor:
         if img.ndim != 3 or txt.ndim != 3:
             raise ValueError("Input img and txt tensors must have 3 dimensions.")

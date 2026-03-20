@@ -37,9 +37,10 @@ from einops import rearrange
 from src.flux.sampling import denoise, get_noise, get_schedule, prepare, unpack
 from src.flux.util import (configs, load_ae, load_clip,
                        load_flow_model2, load_t5)
-from image_datasets.dataset import loader
+from image_datasets.dataset import loader, midjourney_loader
 if is_wandb_available():
     import wandb
+    
 logger = get_logger(__name__, log_level="INFO")
 
 def get_models(name: str, device, offload: bool, is_schnell: bool):
@@ -121,7 +122,7 @@ def main():
         eps=args.adam_epsilon,
     )
 
-    train_dataloader = loader(**args.data_config)
+    train_dataloader = midjourney_loader(**args.data_config)
     # Scheduler and math around the number of training steps.
     overrode_max_train_steps = False
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
@@ -218,6 +219,7 @@ def main():
 
     for epoch in range(first_epoch, args.num_train_epochs):
         train_loss = 0.0
+        siglip_tokens = None
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(dit):
                 img, prompts = batch
@@ -230,7 +232,7 @@ def main():
                     
                     siglip_outputs = siglip2_model(**siglip_inputs)
                     siglip_tokens = siglip_outputs.last_hidden_state # 形状: [batch_size, seq_len, hidden_size]
-                    breakpoint()
+                    
                     # --------------------------------
 
                     x_1 = vae.encode(img.to(accelerator.device).to(torch.float32))

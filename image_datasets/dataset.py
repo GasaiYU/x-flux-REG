@@ -90,3 +90,59 @@ class CustomImageDataset(Dataset):
 def loader(train_batch_size, num_workers, **args):
     dataset = CustomImageDataset(**args)
     return DataLoader(dataset, batch_size=train_batch_size, num_workers=num_workers, shuffle=True)
+
+
+class MidjourneyDataset(Dataset):
+    def __init__(self, data_dir, img_size=512, caption_type='llava', random_ratio=False):
+        """
+        Args:
+            data_dir: root directory containing images/ and metadata.jsonl
+            img_size: max size for image resizing
+            caption_type: 'llava' to use llava_caption, 'prompt' to use original prompt
+            random_ratio: whether to randomly crop to a fixed aspect ratio
+        """
+        self.data_dir = data_dir
+        self.img_size = img_size
+        self.caption_type = caption_type
+        self.random_ratio = random_ratio
+
+        metadata_path = os.path.join(data_dir, "metadata.jsonl")
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            self.metadata = [json.loads(line) for line in f if line.strip()]
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def __getitem__(self, idx):
+        try:
+            item = self.metadata[idx]
+            img_path = os.path.join(self.data_dir, item["file_name"])
+            img = Image.open(img_path).convert("RGB")
+
+            if self.random_ratio:
+                ratio = random.choice(["16:9", "default", "1:1", "4:3"])
+                if ratio != "default":
+                    img = crop_to_aspect_ratio(img, ratio)
+
+            img = image_resize(img, self.img_size)
+            w, h = img.size
+            new_w = (w // 32) * 32
+            new_h = (h // 32) * 32
+            img = img.resize((new_w, new_h))
+            img = torch.from_numpy((np.array(img) / 127.5) - 1)
+            img = img.permute(2, 0, 1)
+
+            if self.caption_type == "llava":
+                prompt = item.get("llava_caption") or item.get("prompt", "")
+            else:
+                prompt = item.get("prompt", "")
+
+            return img, prompt
+        except Exception as e:
+            print(e)
+            return self.__getitem__(random.randint(0, len(self.metadata) - 1))
+
+
+def midjourney_loader(train_batch_size, num_workers, **args):
+    dataset = MidjourneyDataset(**args)
+    return DataLoader(dataset, batch_size=train_batch_size, num_workers=num_workers, shuffle=True)
