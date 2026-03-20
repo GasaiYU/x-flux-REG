@@ -54,7 +54,7 @@ def main(args):
             num_steps=args.num_steps,
             seed=args.seed if args.seed != -1 else torch.Generator(device="cpu").seed(),
             true_gs=args.true_gs,
-            timestep_to_start_cfg=1, # Added this to match Gradio demo default
+            timestep_to_start_cfg=args.timestep_to_start_cfg, # Added this to match Gradio demo default
         )
         
         # Save the image
@@ -81,6 +81,7 @@ if __name__ == "__main__":
     parser.add_argument("--height", type=int, default=1024, help="Image height")
     parser.add_argument("--guidance", type=float, default=4.0, help="Guidance scale")
     parser.add_argument("--true_gs", type=float, default=3.5, help="True guidance scale")
+    parser.add_argument("--timestep_to_start_cfg", type=int, default=1, help="Timestep to start CFG")
     parser.add_argument("--num_steps", type=int, default=25, help="Number of inference steps")
     parser.add_argument("--seed", type=int, default=-1, help="Random seed (-1 for random)")
     
