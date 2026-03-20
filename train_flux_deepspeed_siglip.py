@@ -4,6 +4,8 @@ import math
 import os
 import random
 import shutil
+
+os.environ["HF_HUB_CACHE"] = "/mmu-vcg/gaomingju/data/models/hub"
 from contextlib import nullcontext
 from pathlib import Path
 
