@@ -54,6 +54,7 @@ def main(args):
             num_steps=args.num_steps,
             seed=args.seed if args.seed != -1 else torch.Generator(device="cpu").seed(),
             true_gs=args.true_gs,
+            timestep_to_start_cfg=1, # Added this to match Gradio demo default
         )
         
         # Save the image
